@@ -1,0 +1,45 @@
+const S3 = require("aws-sdk/clients/s3");
+const path = require("path");
+const s3bucket = new S3({
+  accessKeyId: process.env.ACCESS_kEY,
+  secretAccessKey: process.env.SECRET_KEY,
+  region: process.env.REGION,
+  endpoint: process.env.ENDPOINT,
+  s3ForcePathStyle: true,
+});
+
+/**
+ *
+ * @param {Buffer} file
+ * @param {string} fileName
+ * @returns
+ */
+const s3Uploader = (file, fileName) => {
+  console.log(fileName);
+  const fileExtension = path.extname(fileName);
+  fileName =
+    fileName.replace(fileExtension, "").toLowerCase().split(" ").join("-") +
+    "-" +
+    Date.now() +
+    fileExtension;
+
+  const params = {
+    Bucket: process.env.BUCKET_NAME,
+    Key: fileName,
+    Body: file,
+    ACL: "public-read",
+  };
+  return s3bucket.upload(params).promise();
+};
+
+
+
+const getFileStream = (key) => {
+  return s3bucket
+    .getObject({
+      Key: key,
+      Bucket: process.env.BUCKET_NAME,
+    })
+    .createReadStream();
+};
+module.exports = { s3Uploader, getFileStream };
